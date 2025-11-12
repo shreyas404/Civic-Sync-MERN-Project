@@ -1,0 +1,12 @@
+.admin-map-container {
+  /* This fixed height is CRITICAL for Leaflet */
+  height: 400px; 
+  width: 100%;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+/* Leaflet container must also inherit height/width */
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+}

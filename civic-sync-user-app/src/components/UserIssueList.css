@@ -1,0 +1,13 @@
+.user-issue-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.no-issues {
+  padding: 2rem;
+  color: #64748b;
+  font-style: italic;
+  text-align: center;
+  background-color: #f8fafc;
+  border-radius: 8px;
+}

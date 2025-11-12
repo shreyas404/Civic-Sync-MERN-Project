@@ -1,0 +1,205 @@
+.issue-report {
+  display: flex;
+  gap: 1rem;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  transition: all 0.2s ease-in-out;
+  /* Support small screens */
+  flex-direction: column;
+}
+
+@media (min-width: 768px) {
+  .issue-report {
+    flex-direction: row;
+  }
+}
+
+.issue-report.highlight {
+  box-shadow: 0 0 15px 5px rgba(109, 40, 217, 0.5);
+  transform: scale(1.01);
+  border-color: #6d28d9;
+}
+
+/* --- NEW: Image Grid --- */
+.issue-images-grid {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  flex-wrap: wrap; /* Allow wrapping */
+}
+.issue-image-wrapper {
+  width: 150px;
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+}
+.issue-image-wrapper label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  background-color: #e2e8f0;
+  color: #334155;
+  text-align: center;
+}
+/* Style for the admin's proof */
+.issue-image-wrapper.proof-image {
+  border-color: #16a34a; /* Green */
+}
+.issue-image-wrapper.proof-image label {
+  background-color: #16a34a;
+  color: white;
+}
+/* ------------------------ */
+
+
+.issue-media {
+  width: 150px;
+  height: 100px;
+  object-fit: cover;
+  display: block;
+}
+
+.issue-details {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+.issue-category {
+  display: inline-block;
+  align-self: flex-start; 
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #5b21b6;
+  background-color: #ede9fe;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+}
+.issue-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+.issue-info h3 {
+  margin: 0;
+  font-size: 1.125rem;
+  color: #1e293b;
+  word-break: break-word;
+}
+.issue-metadata {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  margin-top: 0.5rem;
+}
+.upvote-display {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6d28d9;
+  padding: 0.25rem 0.5rem;
+  background-color: #f5f3ff;
+  border-radius: 6px;
+}
+.upvote-display svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+.user-email-admin {
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+/* --- NEW: Admin Notes Style --- */
+.issue-notes {
+  font-size: 0.875rem;
+  color: #334155;
+  margin: 0.75rem 0 0 0;
+  border-left: 3px solid #16a34a; /* Green */
+  padding-left: 0.75rem;
+  background-color: #f0fdf4;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+.issue-notes b {
+  color: #15803d;
+}
+/* --- NEW: Rating Style --- */
+.issue-rating {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #ca8a04;
+  margin: 0.5rem 0 0 0;
+}
+
+
+.issue-address {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0.75rem 0 0 0;
+  border-left: 3px solid #e2e8f0;
+  padding-left: 0.75rem;
+}
+.issue-coords {
+  font-size: 0.75rem;
+  font-family: monospace;
+  color: #94a3b8;
+  margin: 0.25rem 0 0 0;
+}
+.edit-input {
+  flex-grow: 1;
+  font-size: 1.125rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+}
+.status-badge {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  border-radius: 99px;
+  text-transform: capitalize;
+  cursor: pointer;
+}
+.status-open { background-color: #fee2e2; color: #b91c1c; }
+.status-pending { background-color: #fef3c7; color: #b45309; }
+.status-resolved { background-color: #dcfce7; color: #166534; }
+
+.issue-controls {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  flex-grow: 1; 
+  align-self: flex-end; 
+}
+.control-button {
+  background: none;
+  border: none;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.control-button.edit { color: #0f766e; }
+.control-button.edit:hover { background-color: #f0fdfa; }
+.control-button.delete { color: #be123c; font-size: 1.5rem; padding: 0 0.5rem; }
+.control-button.delete:hover { background-color: #fef1f2; }
+.control-button.save { color: #166534; background-color: #dcfce7; }
+.control-button.save:hover { background-color: #bbf7d0; }
+.control-button.cancel { color: #9ca3af; }
+.control-button.cancel:hover { background-color: #f3f4f6; }

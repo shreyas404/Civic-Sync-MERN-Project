@@ -1,0 +1,88 @@
+.app-container {
+  background-color: #ffffff;
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  
+  width: 90%;
+  max-width: 1000px; /* Widened for admin content */
+  
+  margin: 2rem auto 5rem auto; 
+}
+
+@media (min-width: 640px) {
+  .app-container {
+    padding: 2rem 3rem;
+  }
+}
+
+.app-container h2 {
+  text-align: left;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #1e293b;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 1rem;
+}
+
+.empty-state-message {
+  padding: 2rem;
+  color: #64748b;
+  font-style: italic;
+  text-align: center;
+  background-color: #f8fafc;
+  border-radius: 8px;
+}
+
+/* Filter Bar Styles */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1rem;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.category-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.category-filter label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #334155;
+}
+
+.category-filter select {
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  font-family: inherit;
+  background-color: #fff;
+}
+.category-filter select:focus {
+  outline: 2px solid #6d28d9;
+  border-color: #6d28d9;
+}
+
+.issue-list {
+  margin-top: 1.5rem;
+}
+
+.form-error {
+  color: #dc2626;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  text-align: center;
+  font-size: 0.875rem;
+}

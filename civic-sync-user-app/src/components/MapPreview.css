@@ -1,0 +1,15 @@
+.map-preview-container {
+  /* This fixed height is CRITICAL for Leaflet */
+  height: 250px; 
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+}
+
+/* Leaflet container must also inherit height/width for correct sizing */
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+}

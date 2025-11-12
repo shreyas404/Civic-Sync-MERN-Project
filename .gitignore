@@ -1,0 +1,15 @@
+# Ignore all node_modules folders in the project
+*/node_modules
+
+# Ignore the backend .env file (THIS IS CRITICAL FOR SECURITY)
+/civic-sync-backend/.env
+
+# Ignore the folder of user-uploaded images
+/civic-sync-backend/uploads
+
+# Ignore all log files
+*.log
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db

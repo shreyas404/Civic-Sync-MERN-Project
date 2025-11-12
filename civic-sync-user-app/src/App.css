@@ -1,0 +1,60 @@
+/* This is the main content area below the sticky nav */
+.main-content {
+  max-width: 1200px;
+  margin: 1.5rem auto;
+  padding: 0 1.5rem;
+}
+
+/* This is the white card container used by all pages */
+.page-container {
+  background-color: #ffffff;
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  width: 100%;
+}
+
+/* Add space between stacked containers on small screens */
+.page-container + .page-container {
+  margin-top: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .page-container {
+    padding: 2rem 3rem;
+  }
+}
+
+.page-container h2 {
+  text-align: left;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: #1e293b;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 1rem;
+}
+
+.page-container .list-title {
+  margin-top: 2rem;
+}
+
+/* Loading Screen Style */
+.loading-screen {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-size: 1.5rem;
+  color: #334155;
+}
+
+/* Common list styles */
+.no-issues {
+  padding: 2rem;
+  color: #64748b;
+  font-style: italic;
+  text-align: center;
+  background-color: #f8fafc;
+  border-radius: 8px;
+}

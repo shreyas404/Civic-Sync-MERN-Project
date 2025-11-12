@@ -1,0 +1,18 @@
+.star-rating {
+  display: flex;
+}
+
+.star {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #e2e8f0; /* Gray (empty) */
+  transition: color 0.2s;
+}
+
+.star.filled {
+  color: #facc15; /* Yellow (filled) */
+}
+
+.star:not(.disabled) {
+  cursor: pointer;
+}

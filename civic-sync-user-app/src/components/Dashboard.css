@@ -1,0 +1,19 @@
+.dashboard-layout {
+  display: grid;
+  /* On large screens, split 50/50 */
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+/* On small screens, stack them */
+@media (max-width: 1024px) {
+  .dashboard-layout {
+    grid-template-columns: 1fr; /* Single column */
+  }
+}
+
+.my-issues-container {
+  /* This will make it scrollable if it gets too long */
+  max-height: 80vh;
+  overflow-y: auto;
+}

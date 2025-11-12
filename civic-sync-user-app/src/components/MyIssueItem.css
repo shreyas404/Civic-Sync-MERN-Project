@@ -1,0 +1,116 @@
+.my-issue-item {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.submission-section {
+  padding: 1rem 1.5rem;
+}
+.submission-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.submission-header h4 {
+  margin: 0;
+  color: #1e293b;
+}
+.user-submission {
+  border-bottom: 1px solid #f1f5f9;
+}
+.admin-proof {
+  background-color: #f0fdf4;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+.re-opened {
+  background-color: #fef2f2;
+  color: #b91c1c;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+.issue-image-link {
+  display: block;
+  margin-bottom: 1rem;
+}
+.issue-thumb {
+  width: 150px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 6px;
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+}
+.issue-details .issue-category {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #5b21b6;
+  background-color: #ede9fe;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+}
+.issue-details h3 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.1rem;
+}
+.issue-details p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #64748b;
+}
+.no-proof {
+  font-size: 0.875rem;
+  color: #64748b;
+  font-style: italic;
+}
+.admin-notes {
+  font-size: 0.875rem;
+  color: #334155;
+  margin: 1rem 0 0 0;
+  border-left: 3px solid #16a34a;
+  padding-left: 0.75rem;
+  background-color: #ffffff;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+.admin-notes b {
+  color: #15803d;
+}
+.rating-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #bbf7d0;
+}
+.rating-section label,
+.final-rating label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+.final-rating {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.status-badge {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  border-radius: 99px;
+  text-transform: capitalize;
+}
+.status-open { background-color: #fee2e2; color: #b91c1c; }
+.status-pending { background-color: #fef3c7; color: #b45309; }
+.status-resolved { background-color: #dcfce7; color: #166534; }
+.form-error {
+  color: #dc2626;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
