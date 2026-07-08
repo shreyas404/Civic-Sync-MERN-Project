@@ -8,41 +8,88 @@ import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs-extra'; // Use fs-extra
+import admin from 'firebase-admin';
 
 // --- CONFIGURATION ---
 dotenv.config();
 const app = express();
 app.use(express.json());
-app.use(cors());
 
-// --- ENV VARIABLE CHECKS ---
+// --- ENV VARIABLE CHECKS & LOGS ---
 const MONGO_URI = process.env.MONGODB_URI; // Updated to match your .env file
 if (!MONGO_URI) {
   console.error("FATAL ERROR: MONGODB_URI is not defined in your .env file.");
   process.exit(1);
+} else {
+  console.log("✅ MONGO_URI verified.");
 }
+
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
   console.error("FATAL ERROR: JWT_SECRET is not defined in your .env file.");
   process.exit(1);
 }
 
-// --- FILE UPLOAD (Multer) CONFIG ---
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const uploadsDir = path.join(__dirname, 'uploads');
-fs.ensureDirSync(uploadsDir); // Automatically create the 'uploads' directory
+const FIREBASE_CREDENTIALS = process.env.FIREBASE_CREDENTIALS;
+const FIREBASE_STORAGE_BUCKET = process.env.FIREBASE_STORAGE_BUCKET;
+if (!FIREBASE_CREDENTIALS || !FIREBASE_STORAGE_BUCKET) {
+  console.error("FATAL ERROR: FIREBASE_CREDENTIALS or FIREBASE_STORAGE_BUCKET is not defined.");
+  process.exit(1);
+} else {
+  console.log("✅ FIREBASE Config verified.");
+}
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadsDir);
+// --- DYNAMIC CORS ---
+const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ['http://localhost:5173', 'http://localhost:5174'];
+console.log("✅ ALLOWED_ORIGINS verified: ", allowedOrigins);
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Blocked by CORS policy'));
+    }
   },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
-  },
+  credentials: true
+}));
+
+// --- FIREBASE ADMIN INIT ---
+try {
+  // Decode the Base64 encoded JSON string to prevent UI parsing errors with newlines
+  const serviceAccount = JSON.parse(Buffer.from(FIREBASE_CREDENTIALS, 'base64').toString('utf8'));
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    storageBucket: FIREBASE_STORAGE_BUCKET
+  });
+  console.log("✅ Firebase Admin initialized successfully.");
+} catch (error) {
+  console.error("FATAL ERROR: Failed to initialize Firebase Admin. Is the Base64 string valid?", error.message);
+  process.exit(1);
+}
+
+const bucket = admin.storage().bucket();
+
+// --- FILE UPLOAD (Multer) CONFIG ---
+// Use memory storage with a strict 5MB limit to prevent OOM on Cloud Run
+const storage = multer.memoryStorage();
+const upload = multer({ 
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
 });
-const upload = multer({ storage });
-app.use('/uploads', express.static(uploadsDir));
+
+// Helper function to upload buffer to Firebase
+const uploadToFirebase = async (file, folder = 'issues') => {
+  const fileName = `${folder}/${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+  const fileUpload = bucket.file(fileName);
+  
+  await fileUpload.save(file.buffer, {
+    metadata: { contentType: file.mimetype }
+  });
+  
+  await fileUpload.makePublic(); // Requires public bucket or IAM roles properly configured
+  
+  return `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+};
 
 // --- MONGODB CONNECTION ---
 mongoose.connect(MONGO_URI)
@@ -226,7 +273,8 @@ app.post('/api/issues', auth, upload.single('file'), async (req, res) => {
       return res.status(400).json({ msg: "Invalid location format." });
     }
 
-    const imageUrl = `/uploads/${req.file.filename}`;
+    // Upload to Firebase Storage directly from memory buffer
+    const imageUrl = await uploadToFirebase(req.file, 'user-issues');
     
     const newIssue = new Issue({
       title, description, address,
@@ -393,6 +441,7 @@ app.get('/api/issues', [auth, adminAuth], async (req, res) => {
     const issues = await Issue.aggregate([
       { $addFields: { upvoteCount: { $size: { $ifNull: ["$upvotes", []] } } } },
       { $sort: { upvoteCount: -1, createdAt: -1 }  },
+      { $limit: 50 },
       { $lookup: { from: 'users', localField: 'submittedBy', foreignField: '_id', as: 'submittedBy' } },
       { $unwind: { path: '$submittedBy', preserveNullAndEmptyArrays: true } },
       { $project: {
@@ -441,7 +490,8 @@ app.post('/api/issues/:id/resolve', [auth, adminAuth, upload.single('proof')], a
     session = await mongoose.startSession();
     session.startTransaction();
 
-    const resolvedImageUrl = `/uploads/${req.file.filename}`;
+    // Upload proof image to Firebase Storage
+    const resolvedImageUrl = await uploadToFirebase(req.file, 'admin-proofs');
     
     const updatedIssue = await Issue.findByIdAndUpdate(
       req.params.id,

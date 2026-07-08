@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import './App.css';
-import Header from './components/Header.jsx';
+import Sidebar from './components/Sidebar.jsx';
+import IssueTable from './components/IssueTable.jsx';
 import IssueReport from './components/IssueReport.jsx';
 import FilterControls from './components/FilterControls.jsx';
 import MapDisplay from './components/MapDisplay.jsx';
@@ -21,7 +22,7 @@ const issueCategories = [
 ];
 
 function App() {
-  
+  const [view, setView] = useState('dashboard');
   const [issues, setIssues] = useState([]); 
   const [statusFilter, setStatusFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -174,87 +175,126 @@ function App() {
   if (!token) return <AdminLogin onLogin={handleLogin} />;
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
-      <Header onLogout={handleLogout} />
+    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row font-sans">
+      <Sidebar 
+        currentView={view} 
+        onViewChange={setView} 
+        onLogout={handleLogout} 
+      />
       
-      {resolvingIssue && (
-        <ResolveModal 
-          issue={resolvingIssue}
-          onClose={() => setResolvingIssue(null)}
-          onSubmit={handleResolveIssue}
-        />
-      )}
-
-      {isMergeModalOpen && (
-        <MergeModal 
-          issues={selectedIssuesObjects}
-          onClose={() => setIsMergeModalOpen(false)}
-          onConfirm={handleMergeSubmit}
-          isMerging={isMerging}
-        />
-      )}
-      
-      {error && <p className="form-error" style={{maxWidth: '800px', margin: '1rem auto'}}>{error}</p>}
-
-      <MapDisplay issues={filteredIssues} />
-
-      <div className="app-container relative">
-        <h2>Active Issues ({filteredIssues.length})</h2>
-
-        <div className="filter-bar">
-          <FilterControls 
-            currentFilter={statusFilter}
-            onFilterChange={setStatusFilter}
-          />
-        </div>
-        
-        <div className="issue-list">
-          {filteredIssues.length > 0 ? (
-            filteredIssues.map(issue => (
-              <IssueReport 
-                key={issue._id} 
-                issue={issue} 
-                onDelete={() => deleteIssue(issue._id)}
-                onToggleStatus={() => toggleIssueStatus(issue._id, issue.status)}
-                onEditTitle={(newTitle) => editIssueTitle(issue._id, newTitle)}
-                onResolve={() => handleOpenResolveModal(issue)}
-                isSelected={selectedIssueIds.includes(issue._id)}
-                onToggleSelect={() => toggleSelection(issue._id)}
+      <div className="flex-1 flex flex-col min-w-0 md:ml-64 pb-20 md:pb-0">
+        <main className="flex-1 p-4 md:p-8">
+          <div className="max-w-7xl mx-auto space-y-6">
+            
+            {resolvingIssue && (
+              <ResolveModal 
+                issue={resolvingIssue}
+                onClose={() => setResolvingIssue(null)}
+                onSubmit={handleResolveIssue}
               />
-            ))
-          ) : (
-            <p className="empty-state-message">
-              No issues match your filter.
-            </p>
-          )}
-        </div>
+            )}
+
+            {isMergeModalOpen && (
+              <MergeModal 
+                issues={selectedIssuesObjects}
+                onClose={() => setIsMergeModalOpen(false)}
+                onConfirm={handleMergeSubmit}
+                isMerging={isMerging}
+              />
+            )}
+            
+            {error && <p className="bg-red-50 text-red-600 p-4 rounded-xl border border-red-100">{error}</p>}
+
+            {view === 'map' && (
+              <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-200">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">Live Issue Map</h2>
+                <MapDisplay issues={filteredIssues} />
+              </div>
+            )}
+
+            {view === 'dashboard' && (
+              <>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Active Issues ({filteredIssues.length})</h2>
+                    <p className="text-sm text-gray-500 mt-1">Manage and resolve reported civic problems.</p>
+                  </div>
+                  <FilterControls 
+                    currentFilter={statusFilter}
+                    onFilterChange={setStatusFilter}
+                  />
+                </div>
+                
+                {/* DESKTOP TABLE VIEW */}
+                <IssueTable 
+                  issues={filteredIssues}
+                  selectedIssueIds={selectedIssueIds}
+                  onToggleSelect={toggleSelection}
+                  onResolve={handleOpenResolveModal}
+                  onDelete={deleteIssue}
+                  onEditTitle={editIssueTitle}
+                />
+
+                {/* MOBILE CARD VIEW */}
+                <div className="block md:hidden space-y-4">
+                  {filteredIssues.length > 0 ? (
+                    filteredIssues.map(issue => (
+                      <IssueReport 
+                        key={issue._id} 
+                        issue={issue} 
+                        onDelete={() => deleteIssue(issue._id)}
+                        onToggleStatus={() => toggleIssueStatus(issue._id, issue.status)}
+                        onEditTitle={(newTitle) => editIssueTitle(issue._id, newTitle)}
+                        onResolve={() => handleOpenResolveModal(issue)}
+                        isSelected={selectedIssueIds.includes(issue._id)}
+                        onToggleSelect={() => toggleSelection(issue._id)}
+                      />
+                    ))
+                  ) : (
+                    <div className="bg-white p-8 rounded-xl border border-gray-100 text-center text-gray-500">
+                      No issues match your filter.
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+
+            {view === 'users' && (
+              <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 text-center">
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">User Directory</h2>
+                <p className="text-gray-500">This feature is coming soon.</p>
+              </div>
+            )}
+
+          </div>
+        </main>
       </div>
 
       {/* STICKY MERGE ACTION BAR */}
-      {selectedIssueIds.length > 1 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] p-4 z-40 transform transition-transform">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
+      {selectedIssueIds.length > 1 && view === 'dashboard' && (
+        <div className="fixed bottom-[64px] md:bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] p-4 z-40 transform transition-transform">
+          <div className="max-w-7xl mx-auto flex items-center justify-between md:pl-64">
             <div className="flex items-center gap-3">
               <div className="bg-purple-100 text-purple-700 w-10 h-10 rounded-full flex items-center justify-center font-bold">
                 {selectedIssueIds.length}
               </div>
               <div>
                 <p className="font-bold text-gray-900">Issues Selected</p>
-                <p className="text-sm text-gray-500">Merge duplicates into a single master issue.</p>
+                <p className="text-xs md:text-sm text-gray-500 hidden sm:block">Merge duplicates into a single master issue.</p>
               </div>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-2 md:gap-3">
               <button 
                 onClick={() => setSelectedIssueIds([])}
-                className="px-4 py-2 font-semibold text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                className="px-4 py-2 font-semibold text-gray-600 hover:bg-gray-100 rounded-lg transition-colors min-h-[44px]"
               >
                 Clear
               </button>
               <button 
                 onClick={() => setIsMergeModalOpen(true)}
-                className="px-6 py-2 font-bold text-white bg-purple-700 hover:bg-purple-800 rounded-lg shadow-sm transition-colors"
+                className="px-6 py-2 font-bold text-white bg-purple-700 hover:bg-purple-800 rounded-lg shadow-sm transition-colors min-h-[44px]"
               >
-                Merge Issues
+                Merge
               </button>
             </div>
           </div>

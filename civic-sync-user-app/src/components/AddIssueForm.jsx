@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
+import L from 'leaflet';
 import { UploadCloud, MapPin, Loader2, Image as ImageIcon } from 'lucide-react';
 import api from '../api.js';
 
@@ -160,7 +161,7 @@ function AddIssueForm({ onIssueSubmitted }) {
           onChange={(e) => setTitle(e.target.value)}
           placeholder="e.g., Massive pothole on Main St"
           disabled={isSubmitting}
-          className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-600/20 focus:border-purple-600 transition-colors"
+          className="w-full px-4 py-2.5 min-h-[44px] rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-600/20 focus:border-purple-600 transition-colors"
         />
       </div>
 
@@ -176,7 +177,7 @@ function AddIssueForm({ onIssueSubmitted }) {
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Describe the issue in detail to help admins understand the severity..."
           disabled={isSubmitting}
-          className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-600/20 focus:border-purple-600 transition-colors resize-none"
+          className="w-full px-4 py-3 min-h-[88px] rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-600/20 focus:border-purple-600 transition-colors resize-none"
         ></textarea>
       </div>
 
@@ -196,7 +197,7 @@ function AddIssueForm({ onIssueSubmitted }) {
             onChange={(e) => setAddress(e.target.value)}
             placeholder="e.g., Near City Park Fountain"
             disabled={isSubmitting}
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-600/20 focus:border-purple-600 transition-colors"
+            className="w-full pl-10 pr-4 py-2.5 min-h-[44px] rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-600/20 focus:border-purple-600 transition-colors"
           />
         </div>
       </div>
@@ -207,11 +208,13 @@ function AddIssueForm({ onIssueSubmitted }) {
           Pinpoint on Map <span className="text-red-500">*</span>
         </label>
         <p className="text-xs text-gray-500 mb-2">Click anywhere on the map to set the exact location.</p>
-        <div className="h-[250px] w-full rounded-xl overflow-hidden border border-gray-200 shadow-sm relative z-0">
+        <div className="h-[40vh] md:h-[400px] w-full rounded-xl overflow-hidden border border-gray-200 shadow-sm relative z-0">
           <MapContainer 
             center={[location.lat, location.lng]} 
             zoom={13} 
             scrollWheelZoom={false}
+            dragging={!L.Browser.mobile}
+            tap={!L.Browser.mobile}
             style={{ height: '100%', width: '100%' }}
           >
             <TileLayer

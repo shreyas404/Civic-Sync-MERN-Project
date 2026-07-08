@@ -10,8 +10,8 @@ function MergeModal({ issues, onClose, onConfirm, isMerging }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center md:p-4 bg-black/60 backdrop-blur-sm">
+      <div className="bg-white md:rounded-2xl shadow-xl w-full h-full md:h-auto md:max-w-2xl overflow-hidden flex flex-col md:max-h-[90vh]">
         
         <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
           <div>
@@ -73,12 +73,12 @@ function MergeModal({ issues, onClose, onConfirm, isMerging }) {
           </div>
         </form>
 
-        <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex justify-end gap-3">
+        <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex justify-end gap-3 shrink-0">
           <button 
             type="button" 
             onClick={onClose}
             disabled={isMerging}
-            className="px-5 py-2.5 rounded-xl font-medium text-gray-700 hover:bg-gray-200 transition-colors disabled:opacity-50"
+            className="px-5 py-2.5 rounded-xl font-medium text-gray-700 hover:bg-gray-200 transition-colors disabled:opacity-50 min-h-[44px]"
           >
             Cancel
           </button>
@@ -86,7 +86,7 @@ function MergeModal({ issues, onClose, onConfirm, isMerging }) {
             type="submit"
             onClick={handleSubmit}
             disabled={isMerging}
-            className="px-6 py-2.5 rounded-xl font-bold text-white bg-purple-700 hover:bg-purple-800 transition-colors shadow-sm disabled:opacity-70 flex items-center gap-2"
+            className="px-6 py-2.5 rounded-xl font-bold text-white bg-purple-700 hover:bg-purple-800 transition-colors shadow-sm disabled:opacity-70 flex items-center gap-2 min-h-[44px]"
           >
             {isMerging && <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin"></div>}
             Merge {issues.length} Issues

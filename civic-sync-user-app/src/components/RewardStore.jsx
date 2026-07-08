@@ -93,7 +93,7 @@ function RewardStore({ user, onRedeem }) {
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {rewards.map((reward) => {
           const canAfford = currentPoints >= reward.cost;
           const isRedeeming = redeemingId === reward._id;

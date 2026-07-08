@@ -1,23 +1,22 @@
-import { LayoutDashboard, Globe, Trophy, Gift, LogOut } from 'lucide-react';
+import { LayoutDashboard, Map as MapIcon, Users, LogOut, ShieldAlert } from 'lucide-react';
 
 function Sidebar({ currentView, onViewChange, onLogout }) {
   const navItems = [
-    { id: 'dashboard', label: 'My Dashboard', icon: LayoutDashboard },
-    { id: 'feed', label: 'Public Feed', icon: Globe },
-    { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
-    { id: 'rewards', label: 'Reward Store', icon: Gift },
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'map', label: 'Live Map', icon: MapIcon },
+    { id: 'users', label: 'User Directory', icon: Users },
   ];
 
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex flex-col w-64 h-screen bg-white border-r border-gray-200 fixed left-0 top-0 z-40">
+      <aside className="hidden md:flex flex-col w-64 h-screen bg-white border-r border-gray-200 fixed left-0 top-0 z-50">
         <div className="p-6 border-b border-gray-100">
-          <h1 className="text-2xl font-bold text-purple-700 tracking-tight flex items-center gap-2">
-            <span className="bg-purple-700 text-white p-1 rounded-lg">
-              <Globe size={24} />
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
+            <span className="bg-gray-900 text-white p-1.5 rounded-lg">
+              <ShieldAlert size={20} />
             </span>
-            Civic-Sync
+            Admin Portal
           </h1>
         </div>
         
@@ -30,7 +29,7 @@ function Sidebar({ currentView, onViewChange, onLogout }) {
               <button
                 key={item.id}
                 onClick={() => onViewChange(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-left font-medium
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-left font-medium min-h-[44px]
                   ${isActive 
                     ? 'bg-purple-50 text-purple-700 shadow-sm' 
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
@@ -46,7 +45,7 @@ function Sidebar({ currentView, onViewChange, onLogout }) {
         <div className="p-4 border-t border-gray-100">
           <button
             onClick={onLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 transition-colors text-left font-medium"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 transition-colors text-left font-medium min-h-[44px]"
           >
             <LogOut size={20} />
             Logout
@@ -55,7 +54,7 @@ function Sidebar({ currentView, onViewChange, onLogout }) {
       </aside>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 px-2 pb-safe pt-2">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 px-2 pb-safe pt-2 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
         <div className="flex justify-around items-center h-16">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -67,6 +66,7 @@ function Sidebar({ currentView, onViewChange, onLogout }) {
                 onClick={() => onViewChange(item.id)}
                 className={`flex flex-col items-center justify-center w-full min-h-[44px] space-y-1
                   ${isActive ? 'text-purple-700' : 'text-gray-500'}`}
+                title={item.label}
               >
                 <div className={`p-2 rounded-full transition-colors ${isActive ? 'bg-purple-100' : ''}`}>
                   <Icon size={24} className={isActive ? 'text-purple-700' : 'text-gray-500'} />

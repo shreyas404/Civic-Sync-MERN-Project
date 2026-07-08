@@ -20,9 +20,9 @@ function PublicFeed({ user, allIssues, onUpvote }) {
       </div>
       
       {allIssues.length > 0 ? (
-        <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {allIssues.map(issue => (
-            <div key={issue._id} className="break-inside-avoid">
+            <div key={issue._id} className="w-full">
               <PublicIssueItem 
                 issue={issue} 
                 currentUserId={user.id}
