@@ -3,12 +3,12 @@ import './IssueReport.css';
 
 const BACKEND_URL = 'http://localhost:5000';
 
-// --- NEW: Added 'onResolve' prop ---
-function IssueReport({ issue, onDelete, onToggleStatus, onEditTitle, onResolve }) {
+function IssueReport({ issue, onDelete, onToggleStatus, onEditTitle, onResolve, isSelected, onToggleSelect }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(issue.title);
 
   const statusClass = `status-${issue.status || 'open'}`;
+  const isMerged = issue.status === 'merged';
 
   const handleSave = () => {
     if (editTitle.trim() && editTitle.trim() !== issue.title) {
@@ -22,29 +22,42 @@ function IssueReport({ issue, onDelete, onToggleStatus, onEditTitle, onResolve }
     setEditTitle(issue.title);
   };
   
-  // --- NEW: Handle clicking the status badge ---
   const handleStatusClick = () => {
-    if (issue.status === 'open') {
-      // If 'open', open the "Resolve" modal
+    if (isMerged) return; // Disabled for merged
+    if (issue.status === 'open' || issue.status === 'pending') {
       onResolve(); 
-    } else if (issue.status === 'pending') {
-      // If 'pending', also open "Resolve" modal
-      onResolve();
     }
-    // If it's 'resolved', do nothing (user must rate/re-open)
   };
 
-  // Build URLs for both the user's image and the admin's proof image
   const userImageUrl = `${BACKEND_URL}${issue.imageUrl}`;
   const resolvedImageUrl = issue.resolvedImageUrl ? `${BACKEND_URL}${issue.resolvedImageUrl}` : null;
-  
   const userEmail = issue.submittedBy ? issue.submittedBy.email : 'Anonymous';
 
   return (
-    <div className={`issue-report ${statusClass}`} id={`issue-${issue._id}`}>
+    <div className={`issue-report ${statusClass} relative ${isMerged ? 'opacity-70 grayscale-[30%] bg-gray-100' : ''}`} id={`issue-${issue._id}`}>
       
-      {/* --- This section now shows TWO images --- */}
-      <div className="issue-images-grid">
+      {/* SELECTION CHECKBOX */}
+      {!isMerged && (
+        <div className="absolute top-4 left-4 z-10 bg-white/80 p-1 rounded-md shadow-sm backdrop-blur-sm">
+          <input 
+            type="checkbox" 
+            checked={isSelected}
+            onChange={onToggleSelect}
+            className="w-6 h-6 text-purple-600 rounded border-gray-300 focus:ring-purple-500 cursor-pointer"
+            title="Select for merging"
+          />
+        </div>
+      )}
+
+      {isMerged && (
+        <div className="absolute top-4 right-4 z-10">
+          <span className="bg-gray-800 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+            Merged
+          </span>
+        </div>
+      )}
+
+      <div className="issue-images-grid pt-10">
         <div className="issue-image-wrapper">
           <label>User's Proof</label>
           {issue.fileType && issue.fileType.startsWith('video/') ? (
@@ -61,7 +74,6 @@ function IssueReport({ issue, onDelete, onToggleStatus, onEditTitle, onResolve }
           )}
         </div>
         
-        {/* --- NEW: Show Admin's Proof --- */}
         {resolvedImageUrl && (
           <div className="issue-image-wrapper proof-image">
             <label>Admin's Proof</label>
@@ -77,7 +89,7 @@ function IssueReport({ issue, onDelete, onToggleStatus, onEditTitle, onResolve }
       </div>
       
       <div className="issue-details">
-        <span className="issue-category">{issue.category}</span>
+        <span className="issue-category">{issue.description || issue.category || "Issue"}</span>
         
         <div className="issue-info">
           {isEditing ? (
@@ -92,9 +104,9 @@ function IssueReport({ issue, onDelete, onToggleStatus, onEditTitle, onResolve }
           )}
           
           <span 
-            className="status-badge"
-            onClick={handleStatusClick} // <-- UPDATED
-            title={issue.status === 'resolved' ? "Resolved (User must rate)" : "Click to Mark as Resolved"}
+            className={`status-badge ${isMerged ? 'cursor-not-allowed' : ''}`}
+            onClick={handleStatusClick}
+            title={isMerged ? "Merged Issue" : issue.status === 'resolved' ? "Resolved (User must rate)" : "Click to Mark as Resolved"}
           >
             {issue.status || 'open'}
           </span>
@@ -110,15 +122,15 @@ function IssueReport({ issue, onDelete, onToggleStatus, onEditTitle, onResolve }
           <span className="user-email-admin">by: {userEmail}</span>
         </div>
         
-        {/* --- NEW: Show admin notes if they exist --- */}
         {issue.resolvedNotes && <p className="issue-notes"><b>Admin Notes:</b> {issue.resolvedNotes}</p>}
-        {/* --- NEW: Show user rating if it exists --- */}
         {issue.rating && <p className="issue-rating"><b>User Rating:</b> {issue.rating} / 5 ★</p>}
+        {isMerged && issue.mergedInto && <p className="text-sm text-gray-500 mt-2"><b>Merged Into:</b> {issue.mergedInto}</p>}
+        {issue.linkedReporters?.length > 0 && <p className="text-sm text-purple-600 mt-2"><b>Linked Duplicates:</b> {issue.linkedReporters.length}</p>}
 
         {issue.address && <p className="issue-address">{issue.address}</p>}
-        {issue.lat && issue.lng && (
+        {issue.location?.coordinates && (
           <p className="issue-coords">
-            Coords: {issue.lat.toFixed(4)}, {issue.lng.toFixed(4)}
+            Coords: {issue.location.coordinates[1].toFixed(4)}, {issue.location.coordinates[0].toFixed(4)}
           </p>
         )}
 
@@ -130,7 +142,7 @@ function IssueReport({ issue, onDelete, onToggleStatus, onEditTitle, onResolve }
             </>
           ) : (
             <>
-              <button className="control-button edit" onClick={() => setIsEditing(true)}>Edit</button>
+              {!isMerged && <button className="control-button edit" onClick={() => setIsEditing(true)}>Edit</button>}
               <button 
                 className="control-button delete" 
                 onClick={onDelete}

@@ -1,11 +1,6 @@
-/*
-  This is the global style file.
-  It adds "box-sizing: border-box" to fix width issues.
-*/
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-
-/* Import Leaflet CSS */
-@import 'leaflet/dist/leaflet.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 *, *::before, *::after {
   box-sizing: border-box;

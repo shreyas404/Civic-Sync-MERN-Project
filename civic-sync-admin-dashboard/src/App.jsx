@@ -5,7 +5,8 @@ import IssueReport from './components/IssueReport.jsx';
 import FilterControls from './components/FilterControls.jsx';
 import MapDisplay from './components/MapDisplay.jsx';
 import AdminLogin from './components/AdminLogin.jsx';
-import ResolveModal from './components/ResolveModal.jsx'; // <-- NEW
+import ResolveModal from './components/ResolveModal.jsx';
+import MergeModal from './components/MergeModal.jsx';
 import api from './api.js';
 
 const issueCategories = [
@@ -28,8 +29,12 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // --- NEW: State for the modal ---
-  const [resolvingIssue, setResolvingIssue] = useState(null); // This will hold the issue to be resolved
+  const [resolvingIssue, setResolvingIssue] = useState(null); 
+  
+  // MERGE FEATURE STATE
+  const [selectedIssueIds, setSelectedIssueIds] = useState([]);
+  const [isMergeModalOpen, setIsMergeModalOpen] = useState(false);
+  const [isMerging, setIsMerging] = useState(false);
 
   useEffect(() => {
     const fetchAllIssues = async () => {
@@ -39,11 +44,11 @@ function App() {
           setIssues(res.data);
           setError(null);
         } catch (err) {
-          console.error('Error fetching all issues:', err.response.data);
-          if (err.response.status === 403) {
+          console.error('Error fetching all issues:', err.response?.data);
+          if (err.response?.status === 403) {
             setError("Access Denied: You are not an admin.");
             handleLogout();
-          } else if (err.response.status === 401 || err.response.status === 400) {
+          } else if (err.response?.status === 401 || err.response?.status === 400) {
             handleLogout();
           }
         } finally {
@@ -61,45 +66,42 @@ function App() {
     setToken(newToken);
     setIsLoading(true);
   };
+  
   const handleLogout = () => {
     localStorage.removeItem('token');
     setToken(null);
     setIssues([]);
+    setSelectedIssueIds([]);
   };
 
-  // --- NEW: Handle opening the modal ---
   const handleOpenResolveModal = (issue) => {
     setResolvingIssue(issue);
   };
 
-  // --- NEW: Handle submitting the proof ---
   const handleResolveIssue = async (issueId, formData) => {
     try {
       const res = await api.post(`/issues/${issueId}/resolve`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      
-      // Update the issue in our state
       setIssues(prevIssues => prevIssues.map(issue => 
         issue._id === issueId ? { ...issue, ...res.data } : issue
       ));
-      
-      console.log('Issue resolved:', res.data);
     } catch(e) {
       console.error("Error resolving issue:", e);
       throw e;
     }
   };
 
-  // --- UPDATED: This function is now just for 'pending' or 'open' ---
   const toggleIssueStatus = async (id, currentStatus) => {
     if (currentStatus === 'resolved') {
       alert("This issue is resolved. You cannot change its status until the user rates it and re-opens it.");
       return;
     }
-
+    if (currentStatus === 'merged') {
+      alert("This issue is merged into another issue and cannot be modified directly.");
+      return;
+    }
     let newStatus = currentStatus === 'open' ? 'pending' : 'open';
-    
     try {
       await api.put(`/issues/${id}`, { status: newStatus });
       setIssues(prevIssues => prevIssues.map(issue => 
@@ -113,6 +115,7 @@ function App() {
     try {
       await api.delete(`/issues/${id}`);
       setIssues(prevIssues => prevIssues.filter(issue => issue._id !== id));
+      setSelectedIssueIds(prev => prev.filter(selectedId => selectedId !== id));
     } catch (e) { console.error("Error deleting doc:", e); }
   };
   
@@ -124,25 +127,56 @@ function App() {
       ));
     } catch (e) { console.error("Error editing doc:", e); }
   };
+
+  // MERGE HANDLERS
+  const toggleSelection = (id) => {
+    setSelectedIssueIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const handleMergeSubmit = async (masterIssueId, duplicateIssueIds) => {
+    setIsMerging(true);
+    try {
+      const res = await api.post('/admin/issues/merge', { masterIssueId, duplicateIssueIds });
+      
+      // Update UI: Master gets updated, duplicates get marked as merged
+      setIssues(prevIssues => prevIssues.map(issue => {
+        if (issue._id === masterIssueId) {
+          return { ...issue, ...res.data.masterIssue };
+        }
+        if (duplicateIssueIds.includes(issue._id)) {
+          return { ...issue, status: 'merged', isDuplicate: true, mergedInto: masterIssueId };
+        }
+        return issue;
+      }));
+
+      setIsMergeModalOpen(false);
+      setSelectedIssueIds([]);
+      alert("Issues merged successfully!");
+    } catch (err) {
+      console.error("Error merging issues:", err);
+      alert(err.response?.data?.msg || "Failed to merge issues.");
+    } finally {
+      setIsMerging(false);
+    }
+  };
   
   const filteredIssues = issues.filter(issue => {
     const statusMatch = statusFilter === 'all' || issue.status === statusFilter;
-    const categoryMatch = categoryFilter === 'all' || issue.category === categoryFilter;
+    const categoryMatch = categoryFilter === 'all' || (issue.category === categoryFilter || issue.description); // Simplified for new schema
     return statusMatch && categoryMatch;
   });
 
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-  if (!token) {
-    return <AdminLogin onLogin={handleLogin} />;
-  }
+  const selectedIssuesObjects = issues.filter(issue => selectedIssueIds.includes(issue._id));
+
+  if (isLoading) return <div>Loading...</div>;
+  if (!token) return <AdminLogin onLogin={handleLogin} />;
 
   return (
-    <>
+    <div className="min-h-screen bg-gray-50 pb-24">
       <Header onLogout={handleLogout} />
       
-      {/* --- NEW: Render the modal if an issue is selected --- */}
       {resolvingIssue && (
         <ResolveModal 
           issue={resolvingIssue}
@@ -150,12 +184,21 @@ function App() {
           onSubmit={handleResolveIssue}
         />
       )}
+
+      {isMergeModalOpen && (
+        <MergeModal 
+          issues={selectedIssuesObjects}
+          onClose={() => setIsMergeModalOpen(false)}
+          onConfirm={handleMergeSubmit}
+          isMerging={isMerging}
+        />
+      )}
       
       {error && <p className="form-error" style={{maxWidth: '800px', margin: '1rem auto'}}>{error}</p>}
 
       <MapDisplay issues={filteredIssues} />
 
-      <div className="app-container">
+      <div className="app-container relative">
         <h2>Active Issues ({filteredIssues.length})</h2>
 
         <div className="filter-bar">
@@ -163,33 +206,20 @@ function App() {
             currentFilter={statusFilter}
             onFilterChange={setStatusFilter}
           />
-          <div className="category-filter">
-            <label htmlFor="admin-category-filter">Filter by Category:</label>
-            <select
-              id="admin-category-filter"
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-            >
-              <option value="all">All Categories</option>
-              {issueCategories.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
-          </div>
         </div>
         
         <div className="issue-list">
-          
           {filteredIssues.length > 0 ? (
             filteredIssues.map(issue => (
               <IssueReport 
                 key={issue._id} 
                 issue={issue} 
                 onDelete={() => deleteIssue(issue._id)}
-                // --- UPDATED: Pass the new functions ---
                 onToggleStatus={() => toggleIssueStatus(issue._id, issue.status)}
                 onEditTitle={(newTitle) => editIssueTitle(issue._id, newTitle)}
-                onResolve={() => handleOpenResolveModal(issue)} // <-- NEW
+                onResolve={() => handleOpenResolveModal(issue)}
+                isSelected={selectedIssueIds.includes(issue._id)}
+                onToggleSelect={() => toggleSelection(issue._id)}
               />
             ))
           ) : (
@@ -199,7 +229,38 @@ function App() {
           )}
         </div>
       </div>
-    </>
+
+      {/* STICKY MERGE ACTION BAR */}
+      {selectedIssueIds.length > 1 && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] p-4 z-40 transform transition-transform">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="bg-purple-100 text-purple-700 w-10 h-10 rounded-full flex items-center justify-center font-bold">
+                {selectedIssueIds.length}
+              </div>
+              <div>
+                <p className="font-bold text-gray-900">Issues Selected</p>
+                <p className="text-sm text-gray-500">Merge duplicates into a single master issue.</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setSelectedIssueIds([])}
+                className="px-4 py-2 font-semibold text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                Clear
+              </button>
+              <button 
+                onClick={() => setIsMergeModalOpen(true)}
+                className="px-6 py-2 font-bold text-white bg-purple-700 hover:bg-purple-800 rounded-lg shadow-sm transition-colors"
+              >
+                Merge Issues
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
 
