@@ -14,8 +14,6 @@ import { getStorage } from 'firebase-admin/storage';
 // --- CONFIGURATION ---
 dotenv.config();
 const app = express();
-
-const MONGO_URI = process.env.MONGODB_URI;
 const JWT_SECRET = process.env.JWT_SECRET;
 
 // --- CRITICAL MIDDLEWARE ---
@@ -89,7 +87,7 @@ const uploadToFirebase = async (file, folder = 'issues') => {
 };
 
 // --- MONGODB CONNECTION ---
-mongoose.connect(MONGO_URI)
+mongoose.connect(process.env.MONGODB_URI)
   .then(() => {
     console.log("MongoDB connected successfully.");
     seedRewards(); // Run the seed function
