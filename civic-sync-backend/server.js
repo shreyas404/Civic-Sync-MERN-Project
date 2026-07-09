@@ -8,10 +8,8 @@ import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs-extra';
-import { createRequire } from 'module';
-
-const require = createRequire(import.meta.url);
-const admin = require('firebase-admin');
+import { initializeApp, cert } from 'firebase-admin/app';
+import { getStorage } from 'firebase-admin/storage';
 
 // --- CONFIGURATION ---
 dotenv.config();
@@ -42,12 +40,12 @@ try {
     const decodedString = Buffer.from(base64Credentials, 'base64').toString('utf8');
     const serviceAccount = JSON.parse(decodedString);
 
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount), 
+    initializeApp({
+      credential: cert(serviceAccount), 
       storageBucket: storageBucket
     });
 
-    bucket = admin.storage().bucket();
+    bucket = getStorage().bucket();
     console.log("✅ Firebase Admin successfully initialized from Base64!");
   } else {
     console.warn("⚠️ Skipping Firebase Admin initialization (Missing Config).");
