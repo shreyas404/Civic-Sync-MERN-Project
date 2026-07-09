@@ -33,8 +33,7 @@ if (!JWT_SECRET) {
 const FIREBASE_CREDENTIALS = process.env.FIREBASE_CREDENTIALS;
 const FIREBASE_STORAGE_BUCKET = process.env.FIREBASE_STORAGE_BUCKET;
 if (!FIREBASE_CREDENTIALS || !FIREBASE_STORAGE_BUCKET) {
-  console.error("FATAL ERROR: FIREBASE_CREDENTIALS or FIREBASE_STORAGE_BUCKET is not defined.");
-  process.exit(1);
+  console.warn("⚠️ WARNING: FIREBASE_CREDENTIALS or FIREBASE_STORAGE_BUCKET is not defined. Image uploads will fail or use placeholders locally.");
 } else {
   console.log("✅ FIREBASE Config verified.");
 }
@@ -54,20 +53,24 @@ app.use(cors({
 }));
 
 // --- FIREBASE ADMIN INIT ---
+let bucket = null;
 try {
-  // Decode the Base64 encoded JSON string to prevent UI parsing errors with newlines
-  const serviceAccount = JSON.parse(Buffer.from(FIREBASE_CREDENTIALS, 'base64').toString('utf8'));
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    storageBucket: FIREBASE_STORAGE_BUCKET
-  });
-  console.log("✅ Firebase Admin initialized successfully.");
+  if (FIREBASE_CREDENTIALS && FIREBASE_STORAGE_BUCKET) {
+    // Decode the Base64 encoded JSON string to prevent UI parsing errors with newlines
+    const serviceAccount = JSON.parse(Buffer.from(FIREBASE_CREDENTIALS, 'base64').toString('utf8'));
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+      storageBucket: FIREBASE_STORAGE_BUCKET
+    });
+    bucket = admin.storage().bucket();
+    console.log("✅ Firebase Admin initialized successfully.");
+  } else {
+    console.warn("⚠️ Skipping Firebase Admin initialization (Missing Config).");
+  }
 } catch (error) {
   console.error("FATAL ERROR: Failed to initialize Firebase Admin. Is the Base64 string valid?", error.message);
   process.exit(1);
 }
-
-const bucket = admin.storage().bucket();
 
 // --- FILE UPLOAD (Multer) CONFIG ---
 // Use memory storage with a strict 5MB limit to prevent OOM on Cloud Run
@@ -79,6 +82,11 @@ const upload = multer({
 
 // Helper function to upload buffer to Firebase
 const uploadToFirebase = async (file, folder = 'issues') => {
+  if (!bucket) {
+    console.warn("⚠️ Firebase not configured. Using placeholder URL for local development.");
+    return `https://placehold.co/600x400/purple/white?text=Local+Upload+Placeholder`;
+  }
+  
   const fileName = `${folder}/${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9.]/g, '_')}`;
   const fileUpload = bucket.file(fileName);
   
@@ -610,4 +618,23 @@ app.delete('/api/issues/:id', [auth, adminAuth], async (req, res) => {
 
 // --- START THE SERVER ---
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Backend server running on http://localhost:${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Backend server running on http://localhost:${PORT}`);
+  
+  // --- ENVIRONMENT VERIFICATION FRAMEWORK ---
+  console.log("--- Starting Environment Verification ---");
+  const missingVars = [];
+  
+  if (!process.env.MONGODB_URI) missingVars.push("MONGODB_URI");
+  if (!process.env.FIREBASE_CREDENTIALS) missingVars.push("FIREBASE_CREDENTIALS");
+  if (!process.env.FIREBASE_STORAGE_BUCKET) missingVars.push("FIREBASE_STORAGE_BUCKET");
+  if (!process.env.ALLOWED_ORIGINS) missingVars.push("ALLOWED_ORIGINS");
+
+  if (missingVars.length > 0) {
+    console.error(`🚨 CRITICAL WARNING: The following required environment variables are MISSING: ${missingVars.join(', ')}`);
+    console.error("🚨 Deployment on Render will likely fail or behave unpredictably. Please configure them in the Render Dashboard.");
+  } else {
+    console.log("✅ All critical environment variables are present.");
+  }
+  console.log("-----------------------------------------");
+});
