@@ -8,7 +8,10 @@ import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs-extra'; // Use fs-extra
-import admin from 'firebase-admin';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
+const admin = require('firebase-admin');
 
 // --- CONFIGURATION ---
 dotenv.config();
@@ -55,21 +58,32 @@ app.use(cors({
 // --- FIREBASE ADMIN INIT ---
 let bucket = null;
 try {
-  if (FIREBASE_CREDENTIALS && FIREBASE_STORAGE_BUCKET) {
-    // Decode the Base64 encoded JSON string to prevent UI parsing errors with newlines
-    const serviceAccount = JSON.parse(Buffer.from(FIREBASE_CREDENTIALS, 'base64').toString('utf8'));
+  // 1. Grab the Base64 string from Render
+  const base64Credentials = process.env.FIREBASE_CREDENTIALS;
+
+  if (base64Credentials && process.env.FIREBASE_STORAGE_BUCKET) {
+    // 2. Decode the Base64 string into raw text
+    const decodedString = Buffer.from(base64Credentials, 'base64').toString('utf8');
+
+    // 3. Parse the text into a readable JSON object
+    const serviceAccount = JSON.parse(decodedString);
+
+    // 4. Initialize Firebase Admin (Watch out for the singular 'credential'!)
     admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-      storageBucket: FIREBASE_STORAGE_BUCKET
+      credential: admin.credential.cert(serviceAccount), 
+      storageBucket: process.env.FIREBASE_STORAGE_BUCKET
     });
+
     bucket = admin.storage().bucket();
-    console.log("✅ Firebase Admin initialized successfully.");
+    console.log("✅ Firebase Admin successfully initialized from Base64!");
   } else {
-    console.warn("⚠️ Skipping Firebase Admin initialization (Missing Config).");
+    console.warn("⚠️ Skipping Firebase Admin initialization (Missing Config in Local Environment).");
   }
+
 } catch (error) {
-  console.error("FATAL ERROR: Failed to initialize Firebase Admin. Is the Base64 string valid?", error.message);
-  process.exit(1);
+  console.error("❌ FATAL ERROR initializing Firebase:");
+  console.error(error.message); // This will print the actual JS error, not our custom wrapper
+  process.exit(1); 
 }
 
 // --- FILE UPLOAD (Multer) CONFIG ---
