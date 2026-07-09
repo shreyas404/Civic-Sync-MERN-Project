@@ -18,16 +18,9 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 // --- CRITICAL MIDDLEWARE ---
 app.use(express.json());
-const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ['http://localhost:5173', 'http://localhost:5174'];
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Blocked by CORS policy'));
-    }
-  },
-  credentials: true
+    origin: true, // This explicitly reflects the exact requesting origin back to the browser
+    credentials: true
 }));
 
 // --- FIREBASE ADMIN INIT ---
