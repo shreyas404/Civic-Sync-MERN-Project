@@ -7,7 +7,7 @@ import jwt from 'jsonwebtoken';
 import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import fs from 'fs-extra'; // Use fs-extra
+import fs from 'fs-extra';
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
@@ -16,34 +16,10 @@ const admin = require('firebase-admin');
 // --- CONFIGURATION ---
 dotenv.config();
 const app = express();
+
+// --- CRITICAL MIDDLEWARE ---
 app.use(express.json());
-
-// --- ENV VARIABLE CHECKS & LOGS ---
-const MONGO_URI = process.env.MONGODB_URI; // Updated to match your .env file
-if (!MONGO_URI) {
-  console.error("FATAL ERROR: MONGODB_URI is not defined in your .env file.");
-  process.exit(1);
-} else {
-  console.log("✅ MONGO_URI verified.");
-}
-
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) {
-  console.error("FATAL ERROR: JWT_SECRET is not defined in your .env file.");
-  process.exit(1);
-}
-
-const FIREBASE_CREDENTIALS = process.env.FIREBASE_CREDENTIALS;
-const FIREBASE_STORAGE_BUCKET = process.env.FIREBASE_STORAGE_BUCKET;
-if (!FIREBASE_CREDENTIALS || !FIREBASE_STORAGE_BUCKET) {
-  console.warn("⚠️ WARNING: FIREBASE_CREDENTIALS or FIREBASE_STORAGE_BUCKET is not defined. Image uploads will fail or use placeholders locally.");
-} else {
-  console.log("✅ FIREBASE Config verified.");
-}
-
-// --- DYNAMIC CORS ---
 const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ['http://localhost:5173', 'http://localhost:5174'];
-console.log("✅ ALLOWED_ORIGINS verified: ", allowedOrigins);
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
@@ -57,36 +33,34 @@ app.use(cors({
 
 // --- FIREBASE ADMIN INIT ---
 let bucket = null;
+
 try {
-  // 1. Grab the Base64 string from Render
   const base64Credentials = process.env.FIREBASE_CREDENTIALS;
+  const storageBucket = process.env.FIREBASE_STORAGE_BUCKET;
 
-  if (base64Credentials && process.env.FIREBASE_STORAGE_BUCKET) {
-    // 2. Decode the Base64 string into raw text
+  if (base64Credentials && storageBucket) {
     const decodedString = Buffer.from(base64Credentials, 'base64').toString('utf8');
-
-    // 3. Parse the text into a readable JSON object
     const serviceAccount = JSON.parse(decodedString);
 
-    // 4. Initialize Firebase Admin (Watch out for the singular 'credential'!)
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount), 
-      storageBucket: process.env.FIREBASE_STORAGE_BUCKET
+      storageBucket: storageBucket
     });
 
     bucket = admin.storage().bucket();
     console.log("✅ Firebase Admin successfully initialized from Base64!");
   } else {
-    console.warn("⚠️ Skipping Firebase Admin initialization (Missing Config in Local Environment).");
+    console.warn("⚠️ Skipping Firebase Admin initialization (Missing Config).");
   }
 
 } catch (error) {
   console.error("❌ FATAL ERROR initializing Firebase:");
-  console.error(error.message); // This will print the actual JS error, not our custom wrapper
+  console.error(error); 
   process.exit(1); 
 }
 
 // --- FILE UPLOAD (Multer) CONFIG ---
+// DO NOT PUT ANY CLOSING BRACKETS } OR ); ABOVE THIS LINE
 // Use memory storage with a strict 5MB limit to prevent OOM on Cloud Run
 const storage = multer.memoryStorage();
 const upload = multer({ 
